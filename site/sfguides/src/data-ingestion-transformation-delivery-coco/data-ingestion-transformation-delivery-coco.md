@@ -142,6 +142,8 @@ Make sure you are signed into your trial account. Confirm your active role is **
 
 2. Click the **+** icon next to **Workspaces/Databases** → **Create new Git workspace**.
 
+![github_workspaces](./assets/gitworkspaces.png)
+
 3. Fill out the modal:
    - **Repository URL:** `https://github.com/sfc-gh-kenguyen/updated-data-eng`
    - **Workspace name:** anything you like (e.g., `northstar-data-eng`)
@@ -161,6 +163,8 @@ The Workspace opens with the repo's files visible in the file explorer on the le
 1. In the Workspace file explorer, open **`lab.ipynb`**.
 
 2. Click **Connect** next to the Run button and select **Create and connect**. You can monitor the connection status in the status bar at the bottom of the notebook — wait for it to show **Connected** before proceeding.
+
+![connected](./assets/connected.png)
 
 3. Set the notebook's active **role** and **warehouse** using the **role & warehouse picker at the top-right** of the Notebooks editor (you can also do this in a cell with `USE ROLE` / `USE WAREHOUSE`):
    - **Role:** **ACCOUNTADMIN**
@@ -194,9 +198,9 @@ Rather than clicking through the Marketplace UI, we install the listing **progra
 
 Run the **`weather_install`** cell in the notebook. You should see: *"Database FROSTBYTE_WEATHERSOURCE successfully created."*
 
-The share is now live in your account as `FROSTBYTE_WEATHERSOURCE`. No ingestion logic needed — the data is owned and refreshed by Pelmorex. Later transformation steps reference this database by name.
+![data](./assets/frostbytedata.png)
 
-![data](./assets/weathersource.png)
+The share is now live in your account as `FROSTBYTE_WEATHERSOURCE`. No ingestion logic needed — the data is owned and refreshed by Pelmorex. Later transformation steps reference this database by name.
 
 <!-- ------------------------ -->
 ## Ingest Sales Data From S3
@@ -212,6 +216,8 @@ The notebook's next cell contains `CREATE TABLE` statements for all the raw POS 
 
 Open the **CoCo** chat panel from the notebook toolbar. Throughout this lab you'll copy prompts directly from the guide (and from the prompt cells in the notebook) and send them to CoCo.
 
+![coco](./assets/coco.png)
+
 > **Key principle:** Use CoCo to generate the hard parts and understand why. The workflow is: describe → generate → compare → run. After CoCo generates SQL, compare it against the **Expected output** shown in the notebook cell. If they match, click **Allow** to run it. Optionally, copy the SQL into the notebook cell for future reference.
 
 ### STEP 1 — Create a CSV file format
@@ -222,6 +228,8 @@ Send this prompt to CoCo. Compare the output against the expected output in the 
 
 > *"Create a CSV file format named CSV_FF in TASTY_BYTES.PUBLIC with type = 'csv'."*
 
+![csvfileformat](./assets/csvfileformat.png)
+
 ### STEP 2 — Create the external stage
 
 A **stage** is a pointer to an external storage location (in this case, an S3 bucket) so Snowflake knows where to find the files.
@@ -229,6 +237,8 @@ A **stage** is a pointer to an external storage location (in this case, an S3 bu
 Send this prompt to CoCo. Compare the output against the expected output in the notebook — if they match, click **Allow** to run it.
 
 > *"Create an external stage named S3LOAD in TASTY_BYTES.PUBLIC that points to 's3://sfquickstarts/tastybytes/' and uses the CSV_FF file format."*
+
+![externalstage](./assets/externalstage.png)
 
 ### STEP 3 — Load the COUNTRY table (the teaching example)
 
@@ -239,6 +249,8 @@ Send this prompt to CoCo. Compare the output against the expected output in the 
 > *"Write a COPY INTO statement that loads data from @tasty_bytes.public.s3load/raw_pos/country/ into TASTY_BYTES.RAW_POS.COUNTRY. Use FILE_FORMAT = (FORMAT_NAME = TASTY_BYTES.PUBLIC.CSV_FF ERROR_ON_COLUMN_COUNT_MISMATCH = FALSE) to handle extra columns in the source file."*
 
 You should see about 30 rows loaded successfully. Optionally, copy the SQL into the notebook cell for future reference.
+
+![countrytable](./assets/countrytable.png)
 
 ### STEP 4 — Load all remaining tables (scale-up)
 
@@ -253,6 +265,8 @@ CoCo will generate SQL that creates a LARGE warehouse (`LOAD_WH`), runs six `COP
 > **Note:** This load covers ~1 GB of data across 6 tables and may take several minutes. Wait for all success messages before continuing.
 
 After all six loads complete, confirm the tables and their row counts in the object explorer on the left.
+
+![tablesloaded](./assets/tablesloaded.png)
 
 This completes the **Ingestion** stage of the pipeline.
 
@@ -278,6 +292,8 @@ Send each prompt to CoCo one at a time. Each UDF encapsulates a single unit-conv
 
 Confirm both appear in `TASTY_BYTES.ANALYTICS` in the object explorer.
 
+![udfs](./assets/udfs.png)
+
 ### About Dynamic Tables
 
 A **Dynamic Table** is a table whose contents are defined by a query that Snowflake keeps up to date for you automatically. You write the `SELECT` once and declare a target freshness (`TARGET_LAG`); Snowflake works out the refresh schedule and, where possible, only reprocesses the rows that changed (incremental refresh). You get the readability of a view with the query performance of a table — and you never write or schedule pipeline code.
@@ -296,6 +312,8 @@ This is the base weather Dynamic Table. It joins the live Pelmorex share with Ha
 
 Run the **`daily_weather_dt`** cell in the notebook.
 
+![dailyweatherdt](./assets/dailyweatherdt.png)
+
 > This refresh takes a few minutes. The downstream Dynamic Tables will pick it up automatically once it completes.
 
 ### STEP 4 — WINDSPEED_HAMBURG_DT
@@ -303,6 +321,8 @@ Run the **`daily_weather_dt`** cell in the notebook.
 This Dynamic Table filters `DAILY_WEATHER_DT` to Hamburg specifically, tracking daily maximum wind speed. It's the intermediate table that isolates Hamburg's weather pattern — critical context for understanding why sales dropped on specific days.
 
 Run the **`windspeed_dt`** cell in the notebook.
+
+![windspeed](./assets/windspeed.png)
 
 > **Expected message — this is not an error.** When you create `WINDSPEED_HAMBURG_DT` (and `WEATHER_HAMBURG_DT` below), you may see:
 >
@@ -316,6 +336,8 @@ This is the final weather Dynamic Table — one of the two that power the Semant
 
 Run the **`weather_dt`** cell in the notebook.
 
+![weather](./assets/weather.png)
+
 ### STEP 6 — SALES_HAMBURG_DT (Hamburg sales with date spine)
 
 This is the sales-side counterpart to `WEATHER_HAMBURG_DT`. It filters sales to Hamburg and adds a **date spine** — a generated sequence of every calendar day — so that days with no orders still appear as rows in the data. Without the date spine, days with no activity would be absent entirely, making it impossible for the Semantic View to detect gaps in the sales record.
@@ -323,6 +345,8 @@ This is the sales-side counterpart to `WEATHER_HAMBURG_DT`. It filters sales to 
 Run the **`sales_dt`** cell in the notebook.
 
 After running the **`sales_dt`** cell, confirm `SALES_HAMBURG_DT` appears in `TASTY_BYTES.HARMONIZED`. The initial refresh runs in the background and may take a minute — wait before checking the preview.
+
+![sales](./assets/sales.png)
 
 ### Summary
 
@@ -349,7 +373,11 @@ Cortex Analyst needs this layer because LLMs can't reliably generate SQL against
 
 2. Click **Create with Autopilot** in the top right.
 
+![analyst](./assets/analyst.png)
+
 3. Confirm your role is **ACCOUNTADMIN** and warehouse is **COMPUTE_WH**.
+
+![analystrole](./assets/analystrole.png)
 
 4. Click **Skip** on the **Provide context** page.
 
@@ -364,9 +392,13 @@ Cortex Analyst needs this layer because LLMs can't reliably generate SQL against
 
 7. In the semantic view editor, click **Edit** next to `SALES_HAMBURG_DT`. If Autopilot added a unique or primary key on `ORDER_DATE`, remove it and click **Save**.
 
+![edit](./assets/edit.png)
+
    > **Why remove it?** `SALES_HAMBURG_DT` is the **"many"** side of the relationship we're about to define (many sales days roll up to one weather day per date). A primary/unique key asserts that the keyed column uniquely identifies each row and that this table is a *lookup* table. If Autopilot marks `ORDER_DATE` as a key, it can lead Cortex Analyst to treat the join as one-to-one and skip the aggregation we actually need — producing wrong totals. Removing the key keeps `SALES_HAMBURG_DT` correctly modeled as the many-side fact table.
 
 8. Click **Edit** next to `WEATHER_HAMBURG_DT`. If it's not already there, click **+ Unique Key**, add `DATE_VALID_STD` as the unique key, and click **Save**. (Autopilot often detects this automatically — if `DATE_VALID_STD` is already listed as the unique key, you can leave it as-is.)
+
+![datevalid](./assets/datevalid.png)
 
    > **Why this one *does* need a key:** `WEATHER_HAMBURG_DT` is the **"one"** side — exactly one weather row per date. Declaring `DATE_VALID_STD` as its unique key tells Analyst it's safe to attach a single day's weather to each sales day, which is what makes the many-to-one join below valid.
 
@@ -377,7 +409,11 @@ Cortex Analyst needs this layer because LLMs can't reliably generate SQL against
    - **From Column:** `ORDER_DATE`
    - **To Column:** `DATE_VALID_STD`
 
+![relationship](./assets/relationship.png)
+
    Click **Add** to add the relationship, then click **Save** in the top right to save the entire Semantic View.
+
+![save](./assets/save.png)
 
    > **Why the relationship matters:** This is the single most important step in the delivery stage. The relationship tells Cortex Analyst *how sales and weather connect* — join each sales day (`ORDER_DATE`) to the matching weather day (`DATE_VALID_STD`). Without it, Analyst sees two unrelated tables and physically cannot answer any question that correlates them — including the one this whole lab is built around ("did the sales gap line up with a windspeed event?"). Declaring the join as **Many to One** (many sales days → one weather day) lets Analyst pull each day's weather metrics onto the sales timeline and reason about the two together.
 
@@ -389,11 +425,15 @@ Cortex Analyst needs this layer because LLMs can't reliably generate SQL against
 
 2. Click **Create agent** in the top right.
 
+![createagent](./assets/createagent.png)
+
 3. Configure:
    - **Database and schema:** `TASTY_BYTES.ANALYTICS`
    - **Agent object name:** `HAMBURG_AGENT`
 
 4. Click **Create**.
+
+![agentconfig](./assets/agentconfig.png)
 
 5. Click **Configuration** near the top of the agent editor.
 
@@ -404,11 +444,17 @@ Cortex Analyst needs this layer because LLMs can't reliably generate SQL against
      - `What were Hamburg's best and worst sales months in 2022?`
      - `Is there a relationship between temperature and daily sales in Hamburg?`
 
+![configuration](./assets/configuration.png)
+
 7. Under the **Instructions** tab, set:
    - **Orchestration Instruction:** `Whenever you can answer visually with a chart, always choose to generate a chart even if the user didn't specify to.`
    - **Response instructions:** `Give concise, accurate answers about Tasty Bytes Hamburg sales and weather.`
 
+![instructions](./assets/instructions.png)
+
 8. Click **Tools → Add semantic view** and select **Add semantic view** from the options.
+
+![semanticview](./assets/semanticview.png)
 
 9. Configure the tool:
    - **Service database & schema:** `TASTY_BYTES.ANALYTICS`
@@ -416,13 +462,19 @@ Cortex Analyst needs this layer because LLMs can't reliably generate SQL against
    - **Name:** `TASTY_BYTES_SALES_ANALYST`
    - **Description:** `Answers questions about Tasty Bytes Hamburg sales and weather`
 
+![cortexanalyst](./assets/cortexanalyst.png)
+
 10. Click **Add** then click **Save** in the top right.
+
+![saveagent](./assets/saveagent.png)
 
 ### Ask the agent the key question
 
 Since you created the agent through the UI, it is already available in Snowflake CoWork.
 
 1. In Snowsight, navigate to **AI & ML → Snowflake CoWork**.
+
+![cowork](./assets/cowork.png)
 
 2. Select **HAMBURG_AGENT** from the agent list.
 
