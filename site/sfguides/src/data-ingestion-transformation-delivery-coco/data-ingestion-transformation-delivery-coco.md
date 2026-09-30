@@ -371,38 +371,44 @@ Cortex Analyst needs this layer because LLMs can't reliably generate SQL against
 
 1. In Snowsight, navigate to **AI & ML → Analyst**.
 
-2. Click **Create with Autopilot** in the top right.
+2. Click **Create in Workspaces** in the top right.
 
 ![analyst](./assets/analyst.png)
 
-3. Confirm your role is **ACCOUNTADMIN** and warehouse is **COMPUTE_WH**.
+3. Click **Guided wizard**
+
+![guidedwizard](./assets/guidedwizard.png)
+
+4. Confirm your role is **ACCOUNTADMIN** and warehouse is **COMPUTE_WH**.
 
 ![analystrole](./assets/analystrole.png)
 
-4. Click **Skip** on the **Provide context** page.
+5. Click **Skip** on the **Provide context** page.
 
-5. Configure the following:
+7. Configure the following:
+   - **Select tables:** Select `TASTY_BYTES.HARMONIZED.SALES_HAMBURG_DT` and `TASTY_BYTES.HARMONIZED.WEATHER_HAMBURG_DT`
+   - **Select columns:** Select all columns
    - **Name:** `HAMBURG_INSIGHTS_SV`
    - **Database:** `TASTY_BYTES`
    - **Schema:** `ANALYTICS`
-   - **Select tables:** Select `TASTY_BYTES.HARMONIZED.SALES_HAMBURG_DT` and `TASTY_BYTES.HARMONIZED.WEATHER_HAMBURG_DT`
-   - **Select columns:** Select all columns
 
-6. Click **Create**.
+8. Click **Publish**.
 
-7. In the semantic view editor, click **Edit** next to `SALES_HAMBURG_DT`. If Autopilot added a unique or primary key on `ORDER_DATE`, remove it and click **Save**.
+9. In the semantic view editor, click on the pencil to edit `SALES_HAMBURG_DT`. If a unique or primary key is added for `ORDER_DATE`, remove it and click the checkmark to save.
+
+![edit1](./assets/edit1.png)
 
 ![edit](./assets/edit.png)
 
    > **Why remove it?** `SALES_HAMBURG_DT` is the **"many"** side of the relationship we're about to define (many sales days roll up to one weather day per date). A primary/unique key asserts that the keyed column uniquely identifies each row and that this table is a *lookup* table. If Autopilot marks `ORDER_DATE` as a key, it can lead Cortex Analyst to treat the join as one-to-one and skip the aggregation we actually need — producing wrong totals. Removing the key keeps `SALES_HAMBURG_DT` correctly modeled as the many-side fact table.
 
-8. Click **Edit** next to `WEATHER_HAMBURG_DT`. If it's not already there, click **+ Unique Key**, add `DATE_VALID_STD` as the unique key, and click **Save**. (Autopilot often detects this automatically — if `DATE_VALID_STD` is already listed as the unique key, you can leave it as-is.)
+9. Click **Edit** next to `WEATHER_HAMBURG_DT`. If it's not already there, add `DATE_VALID_STD` as the unique key, and click the checkmark to save. (Autopilot often detects this automatically — if `DATE_VALID_STD` is already listed as the unique key, you can leave it as-is.)
 
 ![datevalid](./assets/datevalid.png)
 
    > **Why this one *does* need a key:** `WEATHER_HAMBURG_DT` is the **"one"** side — exactly one weather row per date. Declaring `DATE_VALID_STD` as its unique key tells Analyst it's safe to attach a single day's weather to each sales day, which is what makes the many-to-one join below valid.
 
-9. Scroll down and click **+** on **Relationships**. Configure the following:
+10. Scroll down and click **+** on **Relationships**. Configure the following:
    - **From Table:** `SALES_HAMBURG_DT`
    - **To Table:** `WEATHER_HAMBURG_DT`
    - **Relationship Type:** Many to One
@@ -411,7 +417,7 @@ Cortex Analyst needs this layer because LLMs can't reliably generate SQL against
 
 ![relationship](./assets/relationship.png)
 
-   Click **Add** to add the relationship, then click **Save** in the top right to save the entire Semantic View.
+   Click the checkmark to add the relationship, then click **Publish changes -> Publish**  in the top right to save the entire Semantic View.
 
 ![save](./assets/save.png)
 
@@ -482,9 +488,35 @@ Since you created the agent through the UI, it is already available in Snowflake
 
    > *"What caused the Hamburg sales gap in February 2022?"*
 
-The agent will query the Semantic View, retrieve the sales and weather data for February 2022, and render a chart showing the correlation between the sales gap and windspeed.
+![results](./assets/results.png)
 
-This completes the **Delivery** stage of the pipeline.
+The first question starts the investigation, rather than ending it. CoWork can use the Cortex Agent to turn a business question into queries against the Semantic View, then help you explore the results conversationally. Review the answer and any generated chart or SQL before drawing a conclusion: a sales gap that coincides with high wind speeds is a useful lead, but correlation alone does not prove what caused the gap.
+
+### Investigate in CoWork
+
+Continue the same conversation with these follow-up questions:
+
+1. **Locate the gap.** Ask: *"Show daily Hamburg sales and order counts for February 2022. Which dates had zero orders?"*
+
+   Check that zero-order dates appear in the result. The date spine in `SALES_HAMBURG_DT` is what makes those days visible instead of leaving holes in the timeline.
+
+2. **Bring in weather.** Ask: *"For those zero-order dates, show daily sales, order counts, and maximum wind speed alongside the surrounding days. Plot the results by date."*
+
+   This is where the Semantic View's relationship matters: it connects each sales date to the corresponding weather date. If CoWork offers a chart, use it to look for a pattern; if it returns a table, compare the dates and values directly.
+
+3. **Test the explanation.** Ask: *"Were there other high-wind days in February 2022 when Hamburg still recorded sales? Compare them with the zero-order days."*
+
+   A good investigation looks for counterexamples, not just a matching spike. Ask CoWork to show the dates and values behind its summary so you can check whether the proposed explanation holds up.
+
+4. **Summarize the evidence.** Ask: *"Summarize what the sales and weather data show about the February 2022 gap. Separate observations from possible explanations, and say what additional data would be needed to confirm the cause."*
+
+Your results may vary with the available data and the agent's response. Do not treat a generated narrative or visualization as proof without checking its underlying dates, measures, and query.
+
+### What the Delivery Layer Adds
+
+The notebook produced reusable, automatically refreshed sales and weather tables. The Semantic View gives those tables business meaning and defines how they relate. The Cortex Agent makes that model available to CoWork, where an analyst can move from a broad question to a date-by-date comparison without writing a new SQL query for every follow-up.
+
+You have now completed the **Delivery** stage: the pipeline does more than store transformed data — it gives analysts a way to investigate it, challenge an initial hypothesis, and communicate what the evidence does and does not show.
 
 <!-- ------------------------ -->
 ## Teardown
