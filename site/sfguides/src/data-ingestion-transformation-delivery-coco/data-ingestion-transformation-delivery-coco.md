@@ -130,7 +130,7 @@ Everything up through Transformation runs from a **single notebook** (`data-eng-
 ## Set Up Your Workspace and Notebook
 Duration: 10
 
-There are no setup scripts to run and no SQL worksheets to open first. Your very first action is to create a **Git-backed Workspace** that clones the companion repo — which contains the notebook you'll run (`data-eng-coco.ipynb`) and a `README.md`.
+There are no setup scripts to run and no SQL worksheets to open first. Your very first action is to create a **Git-backed Workspace** that clones the companion repo — which contains the notebook you'll run (`data-eng-coco.ipynb`).
 
 ### Sign in as ACCOUNTADMIN
 
@@ -147,9 +147,8 @@ Make sure you are signed into your trial account. Confirm your active role is **
 3. Fill out the modal:
    - **Repository URL:** `https://github.com/Snowflake-Labs/sfguide-snowflake-northstar-data-engineering`
    - **Workspace name:** anything you like (e.g., `northstar-data-eng`)
-   - **API integration:** click **+ / Create new** and provide:
+   - **API integration:** click **+ API Integration** and provide:
      - **Name:** `GITHUB_SNOWFLAKE_LABS`
-     - **API provider:** `git_https_api`
      - **Allowed prefixes:** `https://github.com/Snowflake-Labs`
    - Check **Public repository**.
 
@@ -157,7 +156,7 @@ Make sure you are signed into your trial account. Confirm your active role is **
 
 > **What just happened?** The Workspace modal created a Git API integration for you — a one-time step that tells Snowflake which GitHub organization (`Snowflake-Labs`) is an allowed source for Git-backed Workspaces.
 
-The Workspace opens with the repo's files visible in the file explorer on the left: `data-eng-coco.ipynb` and `README.md`.
+The Workspace opens with the repo's files visible in the file explorer on the left including the main notebook you'll need for this lab: `data-eng-coco.ipynb`.
 
 ### Open the notebook and set its compute
 
