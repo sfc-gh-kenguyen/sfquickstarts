@@ -400,9 +400,9 @@ Cortex Analyst needs this layer because LLMs can't reliably generate SQL against
 
 ![edit](./assets/edit.png)
 
-   > **Why remove it?** `SALES_HAMBURG_DT` is the **"many"** side of the relationship we're about to define (many sales days roll up to one weather day per date). A primary/unique key asserts that the keyed column uniquely identifies each row and that this table is a *lookup* table. If Autopilot marks `ORDER_DATE` as a key, it can lead Cortex Analyst to treat the join as one-to-one and skip the aggregation we actually need — producing wrong totals. Removing the key keeps `SALES_HAMBURG_DT` correctly modeled as the many-side fact table.
+   > **Why remove it?** `SALES_HAMBURG_DT` is the **"many"** side of the relationship we're about to define (many sales days roll up to one weather day per date). A primary/unique key asserts that the keyed column uniquely identifies each row and that this table is a *lookup* table. If automation marks `ORDER_DATE` as a key, it can lead Cortex Analyst to treat the join as one-to-one and skip the aggregation we actually need — producing wrong totals. Removing the key keeps `SALES_HAMBURG_DT` correctly modeled as the many-side fact table.
 
-9. Click **Edit** next to `WEATHER_HAMBURG_DT`. If it's not already there, add `DATE_VALID_STD` as the unique key, and click the checkmark to save. (Autopilot often detects this automatically — if `DATE_VALID_STD` is already listed as the unique key, you can leave it as-is.)
+9. Click **Edit** next to `WEATHER_HAMBURG_DT`. If it's not already there, add `DATE_VALID_STD` as the unique key, and click the checkmark to save. (Automation often detects this automatically — if `DATE_VALID_STD` is already listed as the unique key, you can leave it as-is.)
 
 ![datevalid](./assets/datevalid.png)
 
@@ -417,7 +417,9 @@ Cortex Analyst needs this layer because LLMs can't reliably generate SQL against
 
 ![relationship](./assets/relationship.png)
 
-   Click the checkmark to add the relationship, then click **Publish changes -> Publish**  in the top right to save the entire Semantic View.
+   Click the checkmark to add the relationship.
+   
+11. Click **Publish changes -> Publish**  in the top right to save the entire Semantic View.
 
 ![save](./assets/save.png)
 
